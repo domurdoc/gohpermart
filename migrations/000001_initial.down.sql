@@ -1,0 +1,5 @@
+DROP TABLE withdrawals CASCADE;
+
+DROP TABLE orders CASCADE;
+
+DROP TABLE users CASCADE;
