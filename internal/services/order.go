@@ -5,15 +5,16 @@ import (
 
 	"github.com/domurdoc/gophermart/internal/models"
 	"github.com/domurdoc/gophermart/internal/repositories"
+	"github.com/domurdoc/gophermart/internal/services/bonus"
 	"github.com/domurdoc/gophermart/internal/utils"
 )
 
 type OrderService struct {
 	orderRepo    repositories.OrderRepository
-	bonusService *BonusService
+	bonusService *bonus.BonusService
 }
 
-func NewOrderService(orderRepo repositories.OrderRepository, bonusService *BonusService) *OrderService {
+func NewOrderService(orderRepo repositories.OrderRepository, bonusService *bonus.BonusService) *OrderService {
 	return &OrderService{orderRepo: orderRepo, bonusService: bonusService}
 }
 

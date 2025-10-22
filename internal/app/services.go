@@ -1,8 +1,6 @@
 package app
 
 import (
-	"errors"
-
 	"go.uber.org/zap"
 
 	"github.com/domurdoc/gophermart/internal/auth"
@@ -12,22 +10,25 @@ import (
 	"github.com/domurdoc/gophermart/internal/config"
 	"github.com/domurdoc/gophermart/internal/logger"
 	"github.com/domurdoc/gophermart/internal/services"
+	"github.com/domurdoc/gophermart/internal/services/bonus"
+	"github.com/domurdoc/gophermart/internal/utils"
 )
 
 type Services struct {
 	Log     *zap.SugaredLogger
 	Auth    *auth.Auth
 	Client  client.BonusClient
-	Bonus   *services.BonusService
+	Bonus   *bonus.BonusService
 	Order   *services.OrderService
 	Balance *services.BalanceService
 
 	options *config.ServicesOptions
 	repos   *Repositories
+	closer  *utils.Closer
 }
 
 func NewServices(options *config.ServicesOptions, repos *Repositories) (*Services, error) {
-	s := Services{options: options, repos: repos}
+	s := Services{options: options, repos: repos, closer: utils.NewCloser()}
 
 	if err := s.initLog(); err != nil {
 		s.Close()
@@ -57,19 +58,7 @@ func NewServices(options *config.ServicesOptions, repos *Repositories) (*Service
 }
 
 func (s *Services) Close() error {
-	var errs []error
-
-	if s.Bonus != nil {
-		errs = append(errs, s.Bonus.Close())
-	}
-	if s.Client != nil {
-		errs = append(errs, s.Client.Close())
-	}
-	if s.Log != nil {
-		errs = append(errs, s.Log.Sync())
-	}
-
-	return errors.Join(errs...)
+	return s.closer.Close()
 }
 
 func (s *Services) initLog() error {
@@ -78,6 +67,7 @@ func (s *Services) initLog() error {
 		return err
 	}
 	s.Log = log
+	s.closer.Register(log.Sync)
 	return nil
 }
 
@@ -109,6 +99,7 @@ func (s *Services) initBonusClient() error {
 		RetryMaxWaitTime: s.options.RetryMaxWaitTime,
 	}
 	s.Client = client.NewBonusClient(&params)
+	s.closer.Register(s.Client.Close)
 	return nil
 }
 
@@ -123,21 +114,22 @@ func (s *Services) initOrderService() error {
 }
 
 func (s *Services) initBonusService() error {
-	params := services.BonusParams{
-		BonusClient:               s.Client,
-		BalanceRepo:               s.repos.Balance,
-		CheckedOrderBatchMaxSize:  s.options.CheckedOrderBatchMaxSize,
-		CheckedOrderBatchInterval: s.options.CheckedOrderBatchInterval,
-		UserBatchMaxSize:          s.options.UserBatchMaxSize,
-		UserBatchInterval:         s.options.UserBatchInterval,
-		CheckWorkers:              s.options.CheckWorkers,
-		SaveWorkers:               s.options.SaveWorkers,
-		Log:                       s.Log,
+	params := bonus.BonusParams{
+		BonusClient:            s.Client,
+		BalanceRepo:            s.repos.Balance,
+		SaverBatchMaxSize:      s.options.SaverBatchMaxSize,
+		SaverBatchInterval:     s.options.SaverBatchInterval,
+		RefresherBatchMaxSize:  s.options.RefresherBatchMaxSize,
+		RefresherBatchInterval: s.options.RefresherBatchInterval,
+		CheckerPoolSize:        s.options.CheckerPoolSize,
+		SaverPoolSize:          s.options.SaverPoolSize,
+		Log:                    s.Log,
 	}
-	bonusService, err := services.NewBonusService(&params)
+	bonusService, err := bonus.NewBonusService(&params)
 	if err != nil {
 		return err
 	}
 	s.Bonus = bonusService
+	s.closer.Register(s.Bonus.Close)
 	return nil
 }

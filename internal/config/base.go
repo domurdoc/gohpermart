@@ -34,12 +34,12 @@ type ServicesOptions struct {
 	CookieMaxAge time.Duration `env:"COOKIE_MAX_AGE"`
 
 	// BonusService Params
-	CheckedOrderBatchMaxSize  int
-	CheckedOrderBatchInterval time.Duration
-	UserBatchMaxSize          int
-	UserBatchInterval         time.Duration
-	CheckWorkers              int
-	SaveWorkers               int
+	SaverBatchMaxSize      int
+	SaverBatchInterval     time.Duration
+	RefresherBatchMaxSize  int
+	RefresherBatchInterval time.Duration
+	CheckerPoolSize        int
+	SaverPoolSize          int
 
 	// BonusClient Params
 	PoolSize         int
@@ -68,12 +68,12 @@ func New() *Options {
 			CookieName:   "ilovesber",
 			CookieMaxAge: 30 * time.Minute,
 
-			CheckedOrderBatchMaxSize:  0, // for tests
-			CheckedOrderBatchInterval: 10 * time.Second,
-			UserBatchMaxSize:          0, // for tests
-			UserBatchInterval:         10 * time.Second,
-			CheckWorkers:              10,
-			SaveWorkers:               10,
+			SaverBatchMaxSize:      0, // for tests
+			SaverBatchInterval:     10 * time.Second,
+			RefresherBatchMaxSize:  0, // for tests
+			RefresherBatchInterval: 10 * time.Second,
+			CheckerPoolSize:        10,
+			SaverPoolSize:          10,
 
 			PoolSize:         10,
 			PoolTimeout:      60 * time.Second,

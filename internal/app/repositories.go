@@ -6,6 +6,7 @@ import (
 	"github.com/domurdoc/gophermart/internal/config"
 	"github.com/domurdoc/gophermart/internal/repositories"
 	"github.com/domurdoc/gophermart/internal/repositories/pg"
+	"github.com/domurdoc/gophermart/internal/utils"
 	"github.com/domurdoc/gophermart/migrations"
 )
 
@@ -16,10 +17,11 @@ type Repositories struct {
 
 	options *config.RepositoriesOptions
 	db      *sql.DB
+	closer  *utils.Closer
 }
 
 func NewRepositories(options *config.RepositoriesOptions) (*Repositories, error) {
-	r := Repositories{options: options}
+	r := Repositories{options: options, closer: utils.NewCloser()}
 	if err := r.initDB(); err != nil {
 		return nil, err
 	}
@@ -39,10 +41,7 @@ func NewRepositories(options *config.RepositoriesOptions) (*Repositories, error)
 }
 
 func (r *Repositories) Close() error {
-	if r.db != nil {
-		return r.db.Close()
-	}
-	return nil
+	return r.closer.Close()
 }
 
 func (r *Repositories) initDB() error {
@@ -54,6 +53,7 @@ func (r *Repositories) initDB() error {
 		return err
 	}
 	r.db = db
+	r.closer.Register(r.db.Close)
 	return nil
 }
 

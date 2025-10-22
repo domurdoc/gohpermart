@@ -1,19 +1,20 @@
 package app
 
 import (
-	"errors"
-
 	"github.com/domurdoc/gophermart/internal/config"
+	"github.com/domurdoc/gophermart/internal/utils"
 )
 
 type App struct {
 	Options      *config.Options
 	Repositories *Repositories
 	Services     *Services
+
+	closer *utils.Closer
 }
 
 func New() (*App, error) {
-	a := &App{Options: config.New()}
+	a := &App{Options: config.New(), closer: utils.NewCloser()}
 
 	if err := a.initRepositories(); err != nil {
 		a.Close()
@@ -27,15 +28,7 @@ func New() (*App, error) {
 }
 
 func (a *App) Close() error {
-	var errs []error
-
-	if a.Repositories != nil {
-		errs = append(errs, a.Repositories.Close())
-	}
-	if a.Services != nil {
-		errs = append(errs, a.Services.Close())
-	}
-	return errors.Join(errs...)
+	return a.closer.Close()
 }
 
 func (a *App) initRepositories() error {
@@ -44,6 +37,7 @@ func (a *App) initRepositories() error {
 		return err
 	}
 	a.Repositories = repos
+	a.closer.Register(a.Repositories.Close)
 	return nil
 }
 
@@ -53,5 +47,6 @@ func (a *App) initServices() error {
 		return err
 	}
 	a.Services = services
+	a.closer.Register(a.Services.Close)
 	return nil
 }
