@@ -18,7 +18,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if !readJSONRequest(w, r, &req) {
 		return
 	}
-	user, err := h.app.Auth.Register(r.Context(), req.Username, req.Password)
+	user, err := h.app.Services.Auth.Register(r.Context(), req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrUsernameExists) {
 			w.WriteHeader(http.StatusConflict)
@@ -27,7 +27,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		writeInternalServerError(w, err)
 		return
 	}
-	if err := h.app.Auth.Login(r.Context(), w, user); err != nil {
+	if err := h.app.Services.Auth.Login(r.Context(), w, user); err != nil {
 		writeInternalServerError(w, err)
 		return
 	}
@@ -40,7 +40,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	if !readJSONRequest(w, r, &req) {
 		return
 	}
-	user, err := h.app.Auth.AuthenticateCredentials(r.Context(), req.Username, req.Password)
+	user, err := h.app.Services.Auth.AuthenticateCredentials(r.Context(), req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -49,7 +49,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		writeInternalServerError(w, err)
 		return
 	}
-	if err := h.app.Auth.Login(r.Context(), w, user); err != nil {
+	if err := h.app.Services.Auth.Login(r.Context(), w, user); err != nil {
 		writeInternalServerError(w, err)
 		return
 	}

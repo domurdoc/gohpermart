@@ -18,7 +18,7 @@ func (h *Handler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	balance, err := h.app.BalanceService.GetUserBalance(r.Context(), user)
+	balance, err := h.app.Services.Balance.GetUserBalance(r.Context(), user)
 	if err != nil {
 		writeInternalServerError(w, err)
 		return
@@ -41,7 +41,7 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	if !readJSONRequest(w, r, &req) {
 		return
 	}
-	_, err := h.app.BalanceService.Withdraw(r.Context(), user, req.OrderNumber, req.Sum)
+	_, err := h.app.Services.Balance.Withdraw(r.Context(), user, req.OrderNumber, req.Sum)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidOrderNumber) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -68,7 +68,7 @@ func (h *Handler) GetUserWithdrawals(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	withdrawals, err := h.app.BalanceService.GetUserWithdrawals(r.Context(), user)
+	withdrawals, err := h.app.Services.Balance.GetUserWithdrawals(r.Context(), user)
 	if err != nil {
 		writeInternalServerError(w, err)
 		return

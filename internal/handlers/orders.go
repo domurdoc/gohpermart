@@ -17,7 +17,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	_, err := h.app.OrderService.CreateOrder(r.Context(), user, orderNumber)
+	_, err := h.app.Services.Order.CreateOrder(r.Context(), user, orderNumber)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidOrderNumber) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -49,7 +49,7 @@ func (h *Handler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	orders, err := h.app.OrderService.GetUserOrders(r.Context(), user)
+	orders, err := h.app.Services.Order.GetUserOrders(r.Context(), user)
 	if err != nil {
 		writeInternalServerError(w, err)
 		return

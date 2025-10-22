@@ -24,7 +24,7 @@ func New(a *app.App) *Handler {
 }
 
 func (h *Handler) authRequest(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
-	user, err := h.app.Auth.AuthenticateToken(r.Context(), r)
+	user, err := h.app.Services.Auth.AuthenticateToken(r.Context(), r)
 	if err != nil {
 		var errNoToken *transport.NoTokenError
 		var errInvalidToken *strategy.InvalidTokenError

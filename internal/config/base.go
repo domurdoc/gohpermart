@@ -10,14 +10,28 @@ import (
 )
 
 type Options struct {
-	RunAddress           string        `env:"RUN_ADDRESS"`
-	DatabaseURI          string        `env:"DATABASE_URI"`
-	AccrualSystemAddress string        `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	LogLevel             string        `env:"LOG_LEVEL"`
-	JWTSecret            string        `env:"JWT_SECRET"`
-	JWTDuration          time.Duration `env:"JWT_DURATION"`
-	CookieName           string        `env:"COOKIE_NAME"`
-	CookieMaxAge         time.Duration `env:"COOKIE_MAX_AGE"`
+	Server       ServerOptions
+	Repositories RepositoriesOptions
+	Services     ServicesOptions
+}
+
+type ServerOptions struct {
+	RunAddress string `env:"RUN_ADDRESS"`
+}
+
+type RepositoriesOptions struct {
+	DatabaseURI string `env:"DATABASE_URI"`
+}
+
+type ServicesOptions struct {
+	LogLevel             string `env:"LOG_LEVEL"`
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+
+	// Auth
+	JWTSecret    string        `env:"JWT_SECRET"`
+	JWTDuration  time.Duration `env:"JWT_DURATION"`
+	CookieName   string        `env:"COOKIE_NAME"`
+	CookieMaxAge time.Duration `env:"COOKIE_MAX_AGE"`
 
 	// BonusService Params
 	CheckedOrderBatchMaxSize  int
@@ -39,30 +53,38 @@ type Options struct {
 
 func New() *Options {
 	options := Options{
-		RunAddress:           "localhost:8000",
-		DatabaseURI:          "postgresql://domurdoc@localhost/praktikum?sslmode=disable",
-		AccrualSystemAddress: "localhost:8001",
-		LogLevel:             "debug",
-		JWTSecret:            utils.GenerateRandomString(utils.ALPHA, 32),
-		JWTDuration:          600 * time.Second,
-		CookieName:           "ilovesber",
-		CookieMaxAge:         30 * time.Minute,
+		Server: ServerOptions{
+			RunAddress: "localhost:8000",
+		},
+		Repositories: RepositoriesOptions{
+			DatabaseURI: "postgresql://domurdoc@localhost/praktikum?sslmode=disable",
+		},
+		Services: ServicesOptions{
+			AccrualSystemAddress: "localhost:8001",
+			LogLevel:             "debug",
 
-		CheckedOrderBatchMaxSize:  0, // for tests
-		CheckedOrderBatchInterval: 10 * time.Second,
-		UserBatchMaxSize:          0, // for tests
-		UserBatchInterval:         10 * time.Second,
-		CheckWorkers:              10,
-		SaveWorkers:               10,
+			JWTSecret:    utils.GenerateRandomString(utils.ALPHA, 32),
+			JWTDuration:  600 * time.Second,
+			CookieName:   "ilovesber",
+			CookieMaxAge: 30 * time.Minute,
 
-		PoolSize:         10,
-		PoolTimeout:      60 * time.Second,
-		MaxReries:        100,
-		RetryWaitTime:    10 * time.Second,
-		RetryMaxWaitTime: 60 * time.Second,
+			CheckedOrderBatchMaxSize:  0, // for tests
+			CheckedOrderBatchInterval: 10 * time.Second,
+			UserBatchMaxSize:          0, // for tests
+			UserBatchInterval:         10 * time.Second,
+			CheckWorkers:              10,
+			SaveWorkers:               10,
 
-		DebugClient: false,
+			PoolSize:         10,
+			PoolTimeout:      60 * time.Second,
+			MaxReries:        100,
+			RetryWaitTime:    10 * time.Second,
+			RetryMaxWaitTime: 60 * time.Second,
+
+			DebugClient: false,
+		},
 	}
+
 	parseEnv(&options)
 	parseArgs(&options)
 	return &options
@@ -73,10 +95,10 @@ func parseEnv(options *Options) error {
 }
 
 func parseArgs(options *Options) {
-	flag.StringVar(&options.RunAddress, "a", options.RunAddress, "run address")
-	flag.StringVar(&options.DatabaseURI, "d", options.DatabaseURI, "database uri")
-	flag.StringVar(&options.AccrualSystemAddress, "r", options.AccrualSystemAddress, "accrual system address")
-	flag.StringVar(&options.LogLevel, "l", options.LogLevel, "log level")
-	flag.BoolVar(&options.DebugClient, "c", options.DebugClient, "use debug client")
+	flag.StringVar(&options.Server.RunAddress, "a", options.Server.RunAddress, "run address")
+	flag.StringVar(&options.Repositories.DatabaseURI, "d", options.Repositories.DatabaseURI, "database uri")
+	flag.StringVar(&options.Services.AccrualSystemAddress, "r", options.Services.AccrualSystemAddress, "accrual system address")
+	flag.StringVar(&options.Services.LogLevel, "l", options.Services.LogLevel, "log level")
+	flag.BoolVar(&options.Services.DebugClient, "c", options.Services.DebugClient, "use debug client")
 	flag.Parse()
 }

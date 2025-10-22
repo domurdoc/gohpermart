@@ -20,22 +20,22 @@ func main() {
 	}
 	defer a.Close()
 
-	a.Log.Infow(
+	a.Services.Log.Infow(
 		"starting server",
-		"addr", a.Options.RunAddress,
-		"database_uri", a.Options.DatabaseURI,
-		"accrual_system_address", a.Options.AccrualSystemAddress,
-		"log_level", a.Options.LogLevel,
-		"jwt_duration", a.Options.JWTDuration,
-		"cookie_max_age", a.Options.CookieMaxAge,
-		"bonus_client", fmt.Sprintf("%T", a.BonusClient),
+		"addr", a.Options.Server.RunAddress,
+		"database_uri", a.Options.Repositories.DatabaseURI,
+		"accrual_system_address", a.Options.Services.AccrualSystemAddress,
+		"log_level", a.Options.Services.LogLevel,
+		"jwt_duration", a.Options.Services.JWTDuration,
+		"cookie_max_age", a.Options.Services.CookieMaxAge,
+		"bonus_client", fmt.Sprintf("%T", a.Services.Client),
 	)
 	handler := handlers.New(a)
 	router := router.New(handler)
 	router = httputil.AddMiddlewares(
 		router,
-		logger.NewRequestLogger(a.Log),
+		logger.NewRequestLogger(a.Services.Log),
 		compressor.GZIPMiddleware,
 	)
-	log.Fatal(http.ListenAndServe(a.Options.RunAddress, router))
+	log.Fatal(http.ListenAndServe(a.Options.Server.RunAddress, router))
 }
